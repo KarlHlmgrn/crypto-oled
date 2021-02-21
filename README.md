@@ -30,7 +30,7 @@ python -m pip install requests
 # Known issues
 Two devices are hard coded - Apex Pro and Apex 7 TKL.
 If you have Apex Pro TKL or Apex 7 please give me the VID and PID which can be found in device manager and I will add it in the next version.
-Only tested on Windows. No anti-burn in programmed but will come in the future. Time zone is set to CET but you can change it if you want, will change in the future. Some programs will stop the program from picking up keystrokes.
+Only tested on Windows. No anti-burn in programmed but will come in the future. Time zone is set to CET but you can change it if you want, will change in the future. Some programs will stop the program from picking up keystrokes. DO NOT CHANGE SETTINGS IN STEELSERIES ENGINE WHEN PROGRAM IS RUNNING!
 
 # Feedback
 Please leave feedback.
