@@ -217,7 +217,7 @@ while True:
             basicdata = getBasicInfo(graph[1])
             basictimer = 0
         draw.text((0, 40), " ".join((str("{:.2f}".format(basicdata[0])), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
-        if perc > 1:
+        if basicdata[1] > 1:
             draw.text((128, 40), "".join(("+", str("{:.2f}".format((basicdata[1] * 100 - 100))), " %")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
         else:
             draw.text((128, 40), " ".join((str("{:.2f}".format((basicdata[1] * 100 - 100))), "%")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
