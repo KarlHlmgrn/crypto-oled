@@ -213,14 +213,17 @@ while True:
             elif choice == 3:
                 draw.text((64, 40), " ".join(("Min:", str("{:.2f}".format(min(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
     elif basic == 1:
-        if basictimer == 50:
+        if basictimer == 100:
             basicdata = getBasicInfo(graph[1])
             basictimer = 0
-        draw.text((0, 40), " ".join((str("{:.2f}".format(basicdata[0])), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
-        if basicdata[1] > 1:
-            draw.text((128, 40), "".join(("+", str("{:.2f}".format((basicdata[1] * 100 - 100))), " %")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
-        else:
-            draw.text((128, 40), " ".join((str("{:.2f}".format((basicdata[1] * 100 - 100))), "%")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
+        try:
+            draw.text((0, 40), " ".join((str("{:.2f}".format(basicdata[0])), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
+            if basicdata[1] > 1:
+                draw.text((128, 40), "".join(("+", str("{:.2f}".format((basicdata[1] * 100 - 100))), " %")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
+            else:
+                draw.text((128, 40), " ".join((str("{:.2f}".format((basicdata[1] * 100 - 100))), "%")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
+        except:
+            draw.text((0, 40), "error", font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
         basictimer += 1
     data = im.tobytes()
     data = bytearray([0x61]) + data + bytearray([0x00])
