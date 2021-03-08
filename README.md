@@ -1,5 +1,5 @@
 # crypto-oled
-A lightweight ethereum price graph for Steelseries Apex Pro/7 OLED display
+A lightweight interactive ethereum price graph for Steelseries Apex Pro/7 OLED display
 
 # Features
 ```
