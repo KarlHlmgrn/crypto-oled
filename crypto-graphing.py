@@ -143,6 +143,8 @@ devices = en.find(vid=0x1038, pid=0x1618, interface=1)
 if not devices:
     devices = en.find(vid=0x1038, pid=0x1610, interface=1)
 if not devices:
+    devices = en.find(vid=0x1038, pid=0x1612, interface=1)
+if not devices:
     print("No devices found, exiting.")
     sys.exit(0)
 
