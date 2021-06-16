@@ -11,6 +11,8 @@ from datetime import datetime
 import keyboard
 import numpy as np
 from pytz import timezone
+import configparser
+import os
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -105,12 +107,16 @@ def getGraph():
     l = [listax, listay, img, data]
     return l
 
-def getTime(xvalue,data):
+def getTime(xvalue,data,tz):
     try:
         timeraw = data[xvalue]["time"]
         time = "".join((str(timeraw[11]),str(timeraw[12]),str(timeraw[13]),str(timeraw[14]),str(timeraw[15]),"+0000"))
         timefrom = datetime.strptime(time, "%H:%M%z")
-        timeto = timefrom.astimezone(timezone('CET'))
+        try:
+            timeto = timefrom.astimezone(timezone(tz))
+        except:
+            timeto = timefrom.astimezone(timezone("CET"))
+            print("Default time zone CET has been set because an invalid time zone was set in the config file")
         time = timeto.strftime("%H:%M")
     except:
         time = "error"
@@ -132,8 +138,38 @@ def getBasicInfo(listay):
     perc = usd / listay[0]
     l = [usd, perc]
     return l
+
+def getConf():
+    if os.path.isfile("./config.cfg") == False:
+        conf = open("config.cfg", "a")
+        conf.write("[config]\ntimezone = CET\n## All possible time zones: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
+        conf.close()
+        print("config.cfg was created and default time zone CET has been set")
+        return "CET"
+    else:
+        try:
+            config = configparser.ConfigParser()
+            config.read("config.cfg")
+            tz = config.get("config", "timezone")
+            try:
+                datetime.now().astimezone(timezone(tz))
+                print("Time zone {} has been set".format(tz))
+            except:
+                datetime.now().astimezone(timezone("CET"))
+                tz = "CET"
+                print("Default time zone CET has been set because an invalid time zone was set in the config file")
+            return tz
+        except configparser.Error:
+            conf = open("config.cfg", "r+")
+            conf.truncate(0)
+            conf.write("[config]\ntimezone = CET\n## All possible time zones: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
+            conf.close()
+            print("config.cfg was reset and default time zone CET has been set")
+            return "CET"
+
+
     
-    
+tz = getConf()
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -191,7 +227,7 @@ while True:
     draw.rectangle([(0,0),(128,40)], fill=0)
     im.paste(graph[2])
     if xvalue != -1 and xvalue != 144:
-        time = getTime(xvalue,graph[3])
+        time = getTime(xvalue,graph[3],tz)
         y = np.interp(xvalue, graph[0],graph[1])
         draw.line([(((xvalue) * (8/9)), 0), (((xvalue) * (8/9)), 40)], fill=255, width=1)
         
