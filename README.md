@@ -15,6 +15,7 @@ Easy time zone configuration.
 ```
 python crypto-graphing.py
 Use macros or meta-bindings in Steelseries Engine to set different keys to (F20, F21, F22, F23 and F24) to use all the available features.
+Set your time zone of choice in the config file. (It does not account for DST)
 ```
 
 # Dependencies
