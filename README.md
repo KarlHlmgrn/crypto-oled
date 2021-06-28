@@ -1,21 +1,24 @@
 # crypto-oled
-A lightweight interactive ethereum price graph for Steelseries Apex Pro/7 OLED display
+A lightweight interactive crypto price graph for Steelseries Apex Pro/7/5 (TKL) OLED display
 
 # Features
 ```
-Cycle between different data (F20)
+Change currency (F19)
+Cycle between different price and time (F20)
 Move cursor left (F21)
 Move cursor right (F22)
 Set time to compare to, will display the change in percent (F23)
-Get basic information, will only show if cursor is all the way to the right or left. (F24)
+Cycle between different basic info, will only show if cursor is all the way to the right or left. (F24)
 Easy time zone configuration.
+Support for over 8000+ coins from 400+ exchanges.
+Cycle between different configured coins on the fly.
 ```
 
 # Usage
 ```
 python crypto-graphing.py
-Use macros or meta-bindings in Steelseries Engine to set different keys to (F20, F21, F22, F23 and F24) to use all the available features.
-Set your time zone of choice in the config file. (It does not account for DST)
+Use macros or meta-bindings in Steelseries Engine to set different keys to (F19, F20, F21, F22, F23 and F24) to use all the available features.
+Set your time zone of choice in the config file or just set it to local, it's that simple!
 ```
 
 # Dependencies
@@ -28,12 +31,11 @@ python -m pip install requests
                       keyboard
                       pytz
                       configparser
+                      tzlocal
 ```
 
 # Known issues
-Three devices are hard coded - Apex Pro, Apex 7 TKL and Apex 7.
-If you have Apex Pro TKL please give me the VID and PID which can be found in device manager and I will add it in the next version.
-Only tested on Windows. No anti-burn in programmed but will come in the future. Some programs will stop the program from picking up keystrokes. **DO NOT CHANGE SETTINGS IN STEELSERIES ENGINE WHEN PROGRAM IS RUNNING!**
+Only tested on Windows. Some programs will stop the program from picking up keystrokes. **DO NOT CHANGE SETTINGS IN STEELSERIES ENGINE WHEN PROGRAM IS RUNNING!**
 
 # Feedback
 Please leave feedback.
