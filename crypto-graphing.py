@@ -267,6 +267,7 @@ while True:
         data = bytearray([0x61]) + data + bytearray([0x00])
         dev.send_feature_report(data)
         graph = getGraph(currencyx)
+        basicdata = getBasicInfo(graph[1])
         sleep(0.5)
         timer = 0
     if timer == 3000:
@@ -308,15 +309,24 @@ while True:
             basicdata = getBasicInfo(graph[1])
             basictimer = 0
         if basic == 1:
-            draw.text((0, 40), " ".join((str("{:.2f}".format(basicdata[0])), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
+            if basicdata[0] > 10:
+                draw.text((0, 40), " ".join((str("{:.2f}".format(basicdata[0])), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
+            else:
+                draw.text((0, 40), " ".join((str("{:.4f}".format(basicdata[0])), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
             if basicdata[1] > 1:
                 draw.text((128, 40), "".join(("+", str("{:.2f}".format((basicdata[1] * 100 - 100))), " %")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
             else:
                 draw.text((128, 40), " ".join((str("{:.2f}".format((basicdata[1] * 100 - 100))), "%")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
         elif basic == 2:
-            draw.text((64, 40), " ".join(("Max:", str("{:.2f}".format(max(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+            if max(graph[1]) > 10:
+                draw.text((64, 40), " ".join(("Max:", str("{:.2f}".format(max(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+            else:
+                draw.text((64, 40), " ".join(("Max:", str("{:.4f}".format(max(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
         elif basic == 3:
-            draw.text((64, 40), " ".join(("Min:", str("{:.2f}".format(min(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+            if min(graph[1]) > 10:
+                draw.text((64, 40), " ".join(("Min:", str("{:.2f}".format(min(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+            else:
+                draw.text((64, 40), " ".join(("Min:", str("{:.4f}".format(min(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
         basictimer += 1
     data = im.tobytes()
     data = bytearray([0x61]) + data + bytearray([0x00])
