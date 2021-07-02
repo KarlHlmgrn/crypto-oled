@@ -1,3 +1,5 @@
+![logo](https://imgur.com/zFdR6ds)
+
 # crypto-oled
 A lightweight interactive crypto price graph for Steelseries Apex Pro/7/5 (TKL) OLED display
 
