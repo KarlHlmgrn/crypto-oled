@@ -39,6 +39,19 @@ python -m pip install requests
 # Known issues
 Only tested on Windows. Some programs will stop the program from picking up keystrokes. **DO NOT CHANGE SETTINGS IN STEELSERIES ENGINE WHEN PROGRAM IS RUNNING!**
 
+# Donations
+Any donation would be much appreciated!  
+  
+**$BTC**: bc1qfhv4nfpdgfgds2atc4l8azs7zf5455wj4al6a6  
+  
+**$ETH/ERC20 coins**: 0xd22B7833d1637E7e0Ba3aBD88844ad27435BEEc2  
+  
+**$XRP**: rB26NS9K1Ctc5z428wN2L8S3y9uMKQgrZx  
+  
+**$DOGE**: D6c5RjX4ytbQtmzfHVmSD9qXLWpZz6HZoo  
+  
+**$DOT**: 13bHMFxY5KWB7VXCQRMMXU8uBserjgo2PHPJKugiPnbYoYHV  
+
 # Feedback
 Please leave feedback.
 
