@@ -97,16 +97,15 @@ def getGraph(currencyx):
         listax.append(x)
         listay.append(i[1])
         x = x + 1
-    line = plt.plot(listax, listay, "w", linewidth=1.3)
+    ax = plt.axes((0, 0, 1, 1), facecolor="black")
+    line, = plt.plot(listax, listay, "w", linewidth=0.2)
+    line.set_antialiased(False) 
     plt.margins(0)
-    ax = plt.axes()
     ax.relim()
     # lim = ax.get_ylim()
     # minlim = lim[0] - 30
     # maxlim = lim[1] + 10
     # ax.set_ylim(minlim, maxlim)
-    ax.set_facecolor("black")
-    ax.set_position([0, 0, 1, 1])
     fig = plt.gcf()
     fig.patch.set_facecolor('xkcd:black')
     fig.set_size_inches(1.28,0.4)
@@ -254,7 +253,6 @@ keyboard.on_press(keyhook)
 
 xvalue = -1
 timer = 0
-basictimer = 0
 basic = 0
 choice = 0
 comp = 0
@@ -270,9 +268,10 @@ while True:
         basicdata = getBasicInfo(graph[1])
         sleep(0.5)
         timer = 0
-    if timer == 3000:
+    if timer == 600:
         graph = getGraph(currencyx)
         draw.text((0, 0), "Updating...", font=font, fill=255, stroke_width=2, stroke_fill=0)
+        basicdata = getBasicInfo(graph[1])
         data = im.tobytes()
         data = bytearray([0x61]) + data + bytearray([0x00])
         dev.send_feature_report(data)
@@ -305,9 +304,6 @@ while True:
             elif choice == 1:
                 draw.text((64, 40), time, font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
     else:
-        if basictimer == 100:
-            basicdata = getBasicInfo(graph[1])
-            basictimer = 0
         if basic == 1:
             if basicdata[0] > 10:
                 draw.text((0, 40), " ".join((str("{:.2f}".format(basicdata[0])), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
@@ -327,7 +323,6 @@ while True:
                 draw.text((64, 40), " ".join(("Min:", str("{:.2f}".format(min(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
             else:
                 draw.text((64, 40), " ".join(("Min:", str("{:.4f}".format(min(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
-        basictimer += 1
     data = im.tobytes()
     data = bytearray([0x61]) + data + bytearray([0x00])
     dev.send_feature_report(data)
