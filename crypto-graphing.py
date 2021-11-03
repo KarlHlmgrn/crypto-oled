@@ -84,7 +84,7 @@ def getGraph(currencyx):
     url = 'https://api.coingecko.com/api/v3/coins/{}/market_chart?vs_currency=usd&days=1&interval=minutely'.format(currencyid[currencyx])
     response = requests.get(url)
     response_json = response.json()
-    data = response_json
+    dataAPI = response_json
     try:
         plt.clf()
         plt.cla()
@@ -93,7 +93,7 @@ def getGraph(currencyx):
     x = 0
     listax = []
     listay = []
-    for i in data["prices"]:
+    for i in dataAPI["prices"]:
         listax.append(x)
         listay.append(i[1])
         x = x + 1
@@ -110,12 +110,12 @@ def getGraph(currencyx):
     fig.patch.set_facecolor('xkcd:black')
     fig.set_size_inches(1.28,0.4)
     img = buffer_plot_and_get(fig)
-    l = [listax, listay, img, data, currencyx]
+    l = [listax, listay, img, dataAPI, currencyx]
     return l
 
-def getTime(xvalue,data,tz):
-    data = data["prices"]
-    timeraw = data[xvalue][0]
+def getTime(xvalue,dataAPI,tz):
+    dataAPI = dataAPI["prices"]
+    timeraw = dataAPI[xvalue][0]
     time = datetime.fromtimestamp(timeraw/1000, timezone(tz)).strftime("%H:%M")
     return time
 
@@ -281,7 +281,6 @@ while True:
     draw.rectangle([(0,0),(128,40)], fill=0)
     im.paste(graph[2])
     if xvalue != -1 and xvalue != xmax:
-        time = getTime(xvalue,graph[3],tz)
         y = np.interp(xvalue, graph[0],graph[1])
         draw.line([(((xvalue) * (128/xmax)), 0), (((xvalue) * (128/xmax)), 40)], fill=255, width=1)
         
@@ -302,6 +301,7 @@ while True:
                 else:
                     draw.text((64, 40), " ".join((str("{:.4f}".format(y)), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
             elif choice == 1:
+                time = getTime(xvalue,graph[3],tz)
                 draw.text((64, 40), time, font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
     else:
         if basic == 1:
