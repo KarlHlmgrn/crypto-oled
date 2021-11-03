@@ -7,7 +7,6 @@ from time import sleep
 import signal
 import sys
 from datetime import datetime
-from datetime import timedelta
 import keyboard
 import numpy as np
 from pytz import timezone
@@ -15,16 +14,18 @@ import configparser
 import os
 import warnings
 
-from requests import api
 warnings.filterwarnings("ignore")
 
-def buffer_plot_and_get(fig):
+## --- CURRENT VERSION --- ##
+version = 3.0
+## ----------------------- ##
+
+def bufferImg(fig):
     buf = io.BytesIO()
     fig.savefig(buf)
     buf.seek(0)
     img = Image.open(buf)
     return img
-
 
 def signal_handler(sig, frame):
     try:
@@ -36,52 +37,62 @@ def signal_handler(sig, frame):
         sys.exit(0)
 
 def keyhook(event):
-    global xvalue
-    global choice
-    global compchoice
-    global comp
-    global basic
-    global currencyx
-    if event.scan_code == 108:
-        if xvalue == -1:
-            pass
-        else:
-            xvalue -= 1
-    elif event.scan_code == 109:
-        if compchoice == 1:
-            if xvalue == (xmax - 1):
-                pass
-            else:
-                xvalue += 1
-        else:
-            if xvalue == xmax:
-                pass
-            else:
-                xvalue += 1
-    if event.scan_code == 107:
-        if choice == 0:
-            choice = 1
-        else:
-            choice = 0
-    if event.scan_code == 110:
-        if compchoice == 0:
-            compchoice = 1
-            comp = xvalue
-        else:
-            compchoice = 0
-    if event.scan_code == 118:
-        if basic < 3:
-            basic += 1
-        else:
-            basic = 0
+    global cursorX, infoToggle, compareToggle, compareX, basicInfoChoice, coinIndex, xValues, yValues, graphImage, actualIndex, currentPrice, dailyPercent, timeStamps
     if event.scan_code == 106:
-        currencyx += 1
-        if currencyx == len(currency):
-            currencyx = 0
+        coinIndex += 1
+        if coinIndex == len(coins):
+            coinIndex = 0
+        xValues, yValues, graphImage, actualIndex, currentPrice, dailyPercent, timeStamps = getGraph(coinIndex)
+        if cursorX > xValues[-1]:
+            cursorX = xValues[-1]
+        drawImage(True)
+    else:
+        if event.scan_code == 108:
+            if cursorX == -1:
+                cursorX = xmax - 1
+            else:
+                cursorX -= 1
+        elif event.scan_code == 109:
+            if compareToggle == 1:
+                if cursorX == (xmax - 1):
+                    pass
+                else:
+                    cursorX += 1
+            else:
+                if cursorX == xmax:
+                    cursorX = 0
+                else:
+                    cursorX += 1
+        if event.scan_code == 107:
+            if infoToggle == 0:
+                infoToggle = 1
+            else:
+                infoToggle = 0
+        if event.scan_code == 110:
+            if compareToggle == 0:
+                compareToggle = 1
+                compareX = cursorX
+            else:
+                compareToggle = 0
+        if event.scan_code == 118:
+            if basicInfoChoice < 3:
+                basicInfoChoice += 1
+            else:
+                basicInfoChoice = 0
+        drawImage(False)
     compare()
+    
+def compare():
+    global comparePercent
+    if compareX == cursorX:
+        comparePercent = 1
+    elif compareX < cursorX:
+        comparePercent = np.interp(cursorX, xValues, yValues) / np.interp(compareX, xValues, yValues)
+    elif compareX > cursorX:
+        comparePercent = np.interp(compareX, xValues, yValues) / np.interp(cursorX, xValues, yValues)
 
-def getGraph(currencyx):
-    url = 'https://api.coingecko.com/api/v3/coins/{}/market_chart?vs_currency=usd&days=1&interval=minutely'.format(currencyid[currencyx])
+def getGraph(coinIndex):
+    url = 'https://api.coingecko.com/api/v3/coins/{}/market_chart?vs_currency=usd&days=1&interval=minutely'.format(coinIDs[coinIndex])
     response = requests.get(url)
     response_json = response.json()
     dataAPI = response_json
@@ -91,48 +102,88 @@ def getGraph(currencyx):
     except:
         pass
     x = 0
-    listax = []
-    listay = []
+    xValues = []
+    yValues = []
     for i in dataAPI["prices"]:
-        listax.append(x)
-        listay.append(i[1])
+        xValues.append(x)
+        yValues.append(i[1])
         x = x + 1
     ax = plt.axes((0, 0, 1, 1), facecolor="black")
-    line, = plt.plot(listax, listay, "w", linewidth=0.2)
+    line, = plt.plot(xValues, yValues, "w", linewidth=0.2)
     line.set_antialiased(False) 
     plt.margins(0)
     ax.relim()
-    # lim = ax.get_ylim()
-    # minlim = lim[0] - 30
-    # maxlim = lim[1] + 10
-    # ax.set_ylim(minlim, maxlim)
     fig = plt.gcf()
     fig.patch.set_facecolor('xkcd:black')
     fig.set_size_inches(1.28,0.4)
-    img = buffer_plot_and_get(fig)
-    l = [listax, listay, img, dataAPI, currencyx]
-    return l
+    graphImage = bufferImg(fig)
 
-def getTime(xvalue,dataAPI,tz):
-    dataAPI = dataAPI["prices"]
-    timeraw = dataAPI[xvalue][0]
-    time = datetime.fromtimestamp(timeraw/1000, timezone(tz)).strftime("%H:%M")
-    return time
+    currentPrice = yValues[-1]
+    dailyPercent = yValues[-1] / yValues[0]
 
-def compare():
-    global perc
-    if comp == xvalue:
-        perc = 1
-    elif comp < xvalue:
-        perc = np.interp(xvalue, graph[0],graph[1]) / np.interp(comp, graph[0],graph[1])
-    elif comp > xvalue:
-        perc = np.interp(comp, graph[0],graph[1]) / np.interp(xvalue, graph[0],graph[1])
+    timeStamps = []
+    for timeraw in dataAPI["prices"]:
+        timeStamps.append(datetime.fromtimestamp(timeraw[0]/1000, timezone(tz)).strftime("%H:%M"))
 
-def getBasicInfo(listay):
-    usd = listay[-1]
-    perc = listay[-1] / listay[0]
-    l = [usd, perc]
-    return l
+    return xValues, yValues, graphImage, coinIndex, currentPrice, dailyPercent, timeStamps
+
+def drawImage(changeCoin):
+    global timer
+    if changeCoin:
+        draw.text((0, 0), coins[coinIndex].upper(), font=font, fill=255, stroke_width=2, stroke_fill=0)
+        data = im.tobytes()
+        data = bytearray([0x61]) + data + bytearray([0x00])
+        dev.send_feature_report(data)
+        sleep(0.5)
+        timer = 0
+    draw.rectangle([(0,0),(128,40)], fill=0)
+    im.paste(graphImage)
+    if cursorX != -1 and cursorX != xmax:
+        yValue = np.interp(cursorX, xValues, yValues)
+        draw.line([(((cursorX) * (128/xmax)), 0), (((cursorX) * (128/xmax)), 40)], fill=255, width=1)
+        
+        if compareToggle == 1:
+            draw.line([(((compareX) * (128/xmax)), 2), (((compareX) * (128/xmax)), 6)], fill=255, width=1)
+            draw.line([(((compareX) * (128/xmax)), 10), (((compareX) * (128/xmax)), 14)], fill=255, width=1)
+            draw.line([(((compareX) * (128/xmax)), 18), (((compareX) * (128/xmax)), 22)], fill=255, width=1)
+            draw.line([(((compareX) * (128/xmax)), 26), (((compareX) * (128/xmax)), 30)], fill=255, width=1)
+            draw.line([(((compareX) * (128/xmax)), 34), (((compareX) * (128/xmax)), 38)], fill=255, width=1)
+            if comparePercent > 1:
+                draw.text((64, 40), ("+" + f"{(comparePercent * 100 - 100):.2f}" + " %"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+            else:
+                draw.text((64, 40), (f"{(comparePercent * 100 - 100):.2f}" + " %"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+        else:
+            if infoToggle == 0:
+                if yValue > 10:
+                    draw.text((64, 40), (f"{yValue:.2f}" + " USD"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+                else:
+                    draw.text((64, 40), (f"{yValue:.4f}" + " USD"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+            elif infoToggle == 1:
+                draw.text((64, 40), timeStamps[cursorX], font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+    else:
+        if basicInfoChoice == 1:
+            if currentPrice > 10:
+                draw.text((0, 40), (f"{currentPrice:.2f}" + " USD"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
+            else:
+                draw.text((0, 40), (f"{currentPrice:.4f}" + " USD"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
+            if dailyPercent > 1:
+                draw.text((128, 40), ("+", f"{(dailyPercent * 100 - 100):.2f}" + " %"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
+            else:
+                draw.text((128, 40), (f"{(dailyPercent * 100 - 100):.2f}" + " %"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
+        elif basicInfoChoice == 2:
+            # draw.text((64, 40), ("Max:", str("{:." + ("2" if max(yValues) > 10 else "4") + "f}".format(max(yValues)))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+            if max(yValues) > 10:
+                draw.text((64, 40), ("Max: " + f"{max(yValues):.2f}"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+            else:
+                draw.text((64, 40), ("Max: " + f"{max(yValues):.4f}"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+        elif basicInfoChoice == 3:
+            if min(yValues) > 10:
+                draw.text((64, 40), ("Min: " + f"{min(yValues):.2f}"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+            else:
+                draw.text((64, 40), ("Min: " + f"{min(yValues):.4f}"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
+    data = im.tobytes()
+    data = bytearray([0x61]) + data + bytearray([0x00])
+    dev.send_feature_report(data)
 
 def getConf():
     if os.path.isfile("./config.cfg") == False:
@@ -207,7 +258,15 @@ def getConf():
             print("CET has been set as time zone and BTC will be used")
     return tz, currency, currencyid
 
-tz, currency, currencyid = getConf()
+tz, coins, coinIDs = getConf()
+
+latestVersion = requests.get("https://api.github.com/repos/KarlHlmgrn/crypto-oled/releases/latest")
+if latestVersion.status_code == 200:
+    latestVersionJSON = latestVersion.json()
+    if ("v" + str(version)) != latestVersionJSON["tag_name"]:
+        print("\nThere is a new version of crypto-oled available, get it at https://github.com/KarlHlmgrn/crypto-oled/releases/tag/" + str(latestVersionJSON["tag_name"]) + "\n")
+    else:
+        print("You are running the latest version of crypto-oled!")
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -235,102 +294,41 @@ im = Image.new('1', (128,40))
 draw = ImageDraw.Draw(im)
 font = ImageFont.truetype("OpenSans-Regular.ttf", 10)
 
-graph = getGraph(0)
-basicdata = getBasicInfo(graph[1])
+cursorX = -1
+timer, basicInfoChoice, infoToggle, compareX, compareToggle, coinIndex = 0, 0, 0, 0, 0, 0
+
+xValues, yValues, graphImage, actualIndex, currentPrice, dailyPercent, timeStamps = getGraph(coinIndex)
+xmax = xValues[-1]
 
 x = 0
 for i in range(64):
     x += 2
-    im.paste(graph[2])
+    im.paste(graphImage)
     draw.rectangle([(x,0),(128,40)], fill=0)
-    draw.text((0, 0), currency[0].upper(), font=font, fill=255, stroke_width=2, stroke_fill=0)
+    draw.text((0, 0), coins[0].upper(), font=font, fill=255, stroke_width=2, stroke_fill=0)
     data = im.tobytes()
     data = bytearray([0x61]) + data + bytearray([0x00])
     dev.send_feature_report(data)
     sleep(0.05)
 
+drawImage(False)
 keyboard.on_press(keyhook)
 
-xvalue = -1
-timer = 0
-basic = 0
-choice = 0
-comp = 0
-compchoice = 0
-currencyx = 0
 while True:
-    if currencyx != graph[4]:
-        draw.text((0, 0), currency[currencyx].upper(), font=font, fill=255, stroke_width=2, stroke_fill=0)
-        data = im.tobytes()
-        data = bytearray([0x61]) + data + bytearray([0x00])
-        dev.send_feature_report(data)
-        graph = getGraph(currencyx)
-        basicdata = getBasicInfo(graph[1])
-        sleep(0.5)
-        timer = 0
     if timer == 600:
-        graph = getGraph(currencyx)
-        draw.text((0, 0), "Updating...", font=font, fill=255, stroke_width=2, stroke_fill=0)
-        basicdata = getBasicInfo(graph[1])
-        data = im.tobytes()
-        data = bytearray([0x61]) + data + bytearray([0x00])
-        dev.send_feature_report(data)
-        sleep(1)
-        timer = 0
-    xmax = len(graph[1])
-    draw.rectangle([(0,0),(128,40)], fill=0)
-    im.paste(graph[2])
-    if xvalue != -1 and xvalue != xmax:
-        y = np.interp(xvalue, graph[0],graph[1])
-        draw.line([(((xvalue) * (128/xmax)), 0), (((xvalue) * (128/xmax)), 40)], fill=255, width=1)
-        
-        if compchoice == 1:
-            draw.line([(((comp) * (128/xmax)), 2), (((comp) * (128/xmax)), 6)], fill=255, width=1)
-            draw.line([(((comp) * (128/xmax)), 10), (((comp) * (128/xmax)), 14)], fill=255, width=1)
-            draw.line([(((comp) * (128/xmax)), 18), (((comp) * (128/xmax)), 22)], fill=255, width=1)
-            draw.line([(((comp) * (128/xmax)), 26), (((comp) * (128/xmax)), 30)], fill=255, width=1)
-            draw.line([(((comp) * (128/xmax)), 34), (((comp) * (128/xmax)), 38)], fill=255, width=1)
-            if perc > 1:
-                draw.text((64, 40), "".join(("+", str("{:.2f}".format((perc * 100 - 100))), " %")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
-            else:
-                draw.text((64, 40), " ".join((str("{:.2f}".format((perc * 100 - 100))), "%")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
-        else:
-            if choice == 0:
-                if y > 10:
-                    draw.text((64, 40), " ".join((str("{:.2f}".format(y)), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
-                else:
-                    draw.text((64, 40), " ".join((str("{:.4f}".format(y)), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
-            elif choice == 1:
-                time = getTime(xvalue,graph[3],tz)
-                draw.text((64, 40), time, font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
-    else:
-        if basic == 1:
-            if basicdata[0] > 10:
-                draw.text((0, 40), " ".join((str("{:.2f}".format(basicdata[0])), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
-            else:
-                draw.text((0, 40), " ".join((str("{:.4f}".format(basicdata[0])), "USD")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
-            if basicdata[1] > 1:
-                draw.text((128, 40), "".join(("+", str("{:.2f}".format((basicdata[1] * 100 - 100))), " %")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
-            else:
-                draw.text((128, 40), " ".join((str("{:.2f}".format((basicdata[1] * 100 - 100))), "%")), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
-        elif basic == 2:
-            if max(graph[1]) > 10:
-                draw.text((64, 40), " ".join(("Max:", str("{:.2f}".format(max(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
-            else:
-                draw.text((64, 40), " ".join(("Max:", str("{:.4f}".format(max(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
-        elif basic == 3:
-            if min(graph[1]) > 10:
-                draw.text((64, 40), " ".join(("Min:", str("{:.2f}".format(min(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
-            else:
-                draw.text((64, 40), " ".join(("Min:", str("{:.4f}".format(min(graph[1]))))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
-    data = im.tobytes()
-    data = bytearray([0x61]) + data + bytearray([0x00])
-    dev.send_feature_report(data)
+            xValues, yValues, graphImage, actualIndex, currentPrice, dailyPercent, timeStamps = getGraph(coinIndex)
+            if cursorX > xValues[-1]:
+                cursorX = xValues[-1]
+            xmax = xValues[-1]
+            draw.text((0, 0), "Updating...", font=font, fill=255, stroke_width=2, stroke_fill=0)
+            data = im.tobytes()
+            data = bytearray([0x61]) + data + bytearray([0x00])
+            dev.send_feature_report(data)
+            sleep(0.5)
+            timer = 0
+            drawImage(False)
+            
     sleep(0.1)
     timer += 1
-    
-    
 
-dev.close()
 
-    
