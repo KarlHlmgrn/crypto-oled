@@ -171,7 +171,6 @@ def drawImage(changeCoin):
             else:
                 draw.text((128, 40), (f"{(dailyPercent * 100 - 100):.2f}" + " %"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
         elif basicInfoChoice == 2:
-            # draw.text((64, 40), ("Max:", str("{:." + ("2" if max(yValues) > 10 else "4") + "f}".format(max(yValues)))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
             if max(yValues) > 10:
                 draw.text((64, 40), ("Max: " + f"{max(yValues):.2f}"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
             else:
