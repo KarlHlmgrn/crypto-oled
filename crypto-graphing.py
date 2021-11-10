@@ -12,9 +12,12 @@ import numpy as np
 from pytz import timezone
 import configparser
 import os
-import warnings
 
+import warnings
 warnings.filterwarnings("ignore")
+
+import matplotlib
+matplotlib.use('Agg')
 
 ## --- CURRENT VERSION --- ##
 version = 3.0
@@ -48,21 +51,9 @@ def keyhook(event):
         drawImage(True)
     else:
         if event.scan_code == 108:
-            if cursorX == -1:
-                cursorX = xmax - 1
-            else:
-                cursorX -= 1
+            moveCursor("left")
         elif event.scan_code == 109:
-            if compareToggle == 1:
-                if cursorX == (xmax - 1):
-                    pass
-                else:
-                    cursorX += 1
-            else:
-                if cursorX == xmax:
-                    cursorX = 0
-                else:
-                    cursorX += 1
+            moveCursor("right")
         if event.scan_code == 107:
             if infoToggle == 0:
                 infoToggle = 1
@@ -81,6 +72,25 @@ def keyhook(event):
                 basicInfoChoice = 0
         drawImage(False)
     compare()
+
+def moveCursor(direction):
+    global cursorX
+    if direction == "right":
+        if compareToggle == 1:
+            if cursorX == (xmax - 1):
+                pass
+            else:
+                cursorX += 1
+        else:
+            if cursorX == xmax:
+                cursorX = 0
+            else:
+                cursorX += 1
+    else:
+        if cursorX == -1:
+            cursorX = xmax - 1
+        else:
+            cursorX -= 1
     
 def compare():
     global comparePercent
@@ -171,7 +181,6 @@ def drawImage(changeCoin):
             else:
                 draw.text((128, 40), (f"{(dailyPercent * 100 - 100):.2f}" + " %"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
         elif basicInfoChoice == 2:
-            # draw.text((64, 40), ("Max:", str("{:." + ("2" if max(yValues) > 10 else "4") + "f}".format(max(yValues)))), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
             if max(yValues) > 10:
                 draw.text((64, 40), ("Max: " + f"{max(yValues):.2f}"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
             else:
