@@ -40,7 +40,7 @@ def signal_handler(sig, frame):
         sys.exit(0)
 
 def keyhook(event):
-    global cursorX, infoToggle, compareToggle, compareX, basicInfoChoice, coinIndex, xValues, yValues, graphImage, actualIndex, currentPrice, dailyPercent, timeStamps
+    global cursorX, infoToggle, basicInfoChoice, coinIndex, xValues, yValues, graphImage, actualIndex, currentPrice, dailyPercent, timeStamps
     if event.scan_code == 106:
         coinIndex += 1
         if coinIndex == len(coins):
@@ -60,18 +60,21 @@ def keyhook(event):
             else:
                 infoToggle = 0
         if event.scan_code == 110:
-            if compareToggle == 0:
-                compareToggle = 1
-                compareX = cursorX
-            else:
-                compareToggle = 0
+            toggleCompare()
         if event.scan_code == 118:
             if basicInfoChoice < 3:
                 basicInfoChoice += 1
             else:
                 basicInfoChoice = 0
         drawImage(False)
-    compare()
+
+def toggleCompare():
+    global compareToggle, compareX
+    if compareToggle == 0:
+        compareToggle = 1
+        compareX = cursorX
+    else:
+        compareToggle = 0
 
 def moveCursor(direction):
     global cursorX
@@ -91,15 +94,6 @@ def moveCursor(direction):
             cursorX = xmax - 1
         else:
             cursorX -= 1
-    
-def compare():
-    global comparePercent
-    if compareX == cursorX:
-        comparePercent = 1
-    elif compareX < cursorX:
-        comparePercent = np.interp(cursorX, xValues, yValues) / np.interp(compareX, xValues, yValues)
-    elif compareX > cursorX:
-        comparePercent = np.interp(compareX, xValues, yValues) / np.interp(cursorX, xValues, yValues)
 
 def getGraph(coinIndex):
     url = 'https://api.coingecko.com/api/v3/coins/{}/market_chart?vs_currency=usd&days=1&interval=minutely'.format(coinIDs[coinIndex])
@@ -151,6 +145,7 @@ def drawImage(changeCoin):
     if cursorX != -1 and cursorX != xmax:
         yValue = np.interp(cursorX, xValues, yValues)
         draw.line([(((cursorX) * (128/xmax)), 0), (((cursorX) * (128/xmax)), 40)], fill=255, width=1)
+        draw.ellipse((cursorX * (128/xmax) - 2, 38 - (yValue-min(yValues)) * (40/(max(yValues)-min(yValues))), cursorX * (128/xmax) + 2, 42 - (yValue-min(yValues)) * (40/(max(yValues)-min(yValues)))), fill=255)
         
         if compareToggle == 1:
             draw.line([(((compareX) * (128/xmax)), 2), (((compareX) * (128/xmax)), 6)], fill=255, width=1)
@@ -158,6 +153,14 @@ def drawImage(changeCoin):
             draw.line([(((compareX) * (128/xmax)), 18), (((compareX) * (128/xmax)), 22)], fill=255, width=1)
             draw.line([(((compareX) * (128/xmax)), 26), (((compareX) * (128/xmax)), 30)], fill=255, width=1)
             draw.line([(((compareX) * (128/xmax)), 34), (((compareX) * (128/xmax)), 38)], fill=255, width=1)
+            yValue = np.interp(compareX, xValues, yValues)
+            draw.ellipse((compareX * (128/xmax) - 2, 38 - (yValue-min(yValues)) * (40/(max(yValues)-min(yValues))), compareX * (128/xmax) + 2, 42 - (yValue-min(yValues)) * (40/(max(yValues)-min(yValues)))), fill=255)
+            if compareX == cursorX:
+                comparePercent = 1
+            elif compareX < cursorX:
+                comparePercent = np.interp(cursorX, xValues, yValues) / np.interp(compareX, xValues, yValues)
+            elif compareX > cursorX:
+                comparePercent = np.interp(compareX, xValues, yValues) / np.interp(cursorX, xValues, yValues)
             if comparePercent > 1:
                 draw.text((64, 40), ("+" + f"{(comparePercent * 100 - 100):.2f}" + " %"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ms")
             else:
@@ -177,7 +180,7 @@ def drawImage(changeCoin):
             else:
                 draw.text((0, 40), (f"{currentPrice:.4f}" + " USD"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="ls")
             if dailyPercent > 1:
-                draw.text((128, 40), ("+", f"{(dailyPercent * 100 - 100):.2f}" + " %"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
+                draw.text((128, 40), ("+" + f"{(dailyPercent * 100 - 100):.2f}" + " %"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
             else:
                 draw.text((128, 40), (f"{(dailyPercent * 100 - 100):.2f}" + " %"), font=font, fill=255, stroke_width=2, stroke_fill=0, anchor="rs")
         elif basicInfoChoice == 2:
@@ -322,6 +325,21 @@ for i in range(64):
 
 drawImage(False)
 keyboard.on_press(keyhook)
+toggleVolume = False
+def toggleVolume():
+    global toggleVolume
+    if toggleVolume == True:
+        toggleVolume = False
+        keyboard.remove_hotkey(-175)
+        keyboard.remove_hotkey(-174)
+        keyboard.remove_hotkey(-173)
+    else:
+        toggleVolume = True
+        keyboard.add_hotkey(-175, lambda: moveCursor("right"), suppress=True)
+        keyboard.add_hotkey(-174, lambda: moveCursor("left"), suppress=True)
+        keyboard.add_hotkey(-173, lambda: toggleCompare(), suppress=True)
+
+keyboard.add_hotkey('ctrl+shift+v', toggleVolume, suppress=True)
 
 while True:
     if timer == 600:
