@@ -1,4 +1,4 @@
-![logo](https://i.imgur.com/IcPkRC5.png)
+![logo](https://i.imgur.com/mIY9V7q.png)
 
 # crypto-oled
 A lightweight interactive crypto price graph for Steelseries Apex Pro/7/5 (TKL) OLED display
@@ -11,6 +11,7 @@ Move cursor left (F21)
 Move cursor right (F22)
 Set time to compare to, will display the change in percent (F23)
 Cycle between different basic info, will only show if cursor is all the way to the right or left. (F24)
+(NEW!) TOGGLE: Move cursor with the volume wheel and start comparing by pressing mute. (ctrl+shift+v)
 Easy time zone configuration.
 Support for over 8000+ coins from 400+ exchanges.
 Cycle between different configured coins on the fly.
