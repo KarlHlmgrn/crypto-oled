@@ -1,4 +1,4 @@
-![logo](https://i.imgur.com/obsfbI0.png)
+![logo](https://i.imgur.com/2hzS0hP.png)
 
 #  
 ### Stay ahead of the competition with the first lightweight interactive cryptocurrency price graph for the Steelseries Apex Pro/7/5 (TKL) OLED display!
