@@ -20,7 +20,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 ## --- CURRENT VERSION --- ##
-version = 3.2
+version = 3.3
 ## ----------------------- ##
 
 def bufferImg(fig):
@@ -200,16 +200,17 @@ def drawImage(changeCoin):
 def getConf():
     if os.path.isfile("./config.cfg") == False:
         conf = open("config.cfg", "a")
-        conf.write("[config]\ntimezone = UTC\n## All possible time zones: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones\n## Set to local if you want to use your configured time zone in Windows\n\ncurrency = BTC,ETH,XRP\n## All available currencies: https://www.coingecko.com/en/coins/all\n## You can set multiple currencies just seperate them by using a comma")
+        conf.write("[config]\ntimezone = UTC\n## All possible time zones: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones\n## Set to local if you want to use your configured time zone in Windows\n\ncurrency = BTC,ETH,XRP\n## All available currencies: https://www.coingecko.com/en/coins/all\n## You can set multiple currencies just seperate them by using a comma\n\nhotkey = ctrl+shift+v\n## Read more about how to set up hotkeys: https://github.com/boppreh/keyboard#keyboard.add_hotkey\n## To disable the hotkey type OFF")
         conf.close()
         print("config.cfg was created")
         tz = "UTC"
         currency = ["BTC"]
         currencyid = ["bitcoin"]
+        hotkey = "ctrl+shift+v"
     else:
         config = configparser.ConfigParser()
         config.read("config.cfg")
-        if config.has_option("config", "timezone") and config.has_option("config", "currency"):
+        if config.has_option("config", "timezone") and config.has_option("config", "currency") and config.has_option("config", "hotkey"):
             try:
                 tz = config.get("config", "timezone")
                 if tz != "local":
@@ -262,15 +263,25 @@ def getConf():
             except:
                 print("Something unexpected went wrong, exiting...")
                 sys.exit(0)
+            try:
+                hotkey = config.get("config", "hotkey")
+                if hotkey != "OFF":
+                    print("The hotkey set is " + hotkey)
+                else:
+                    print("The hotkey has been turned off")
+            except configparser.Error:
+                print("Default hotkey ctrl+shift+v has been set")
+                hotkey = "ctrl+shift+v"
         else:
             print("Your config file is outdated, fetch a new one!")
             tz = "CET"
             currency = ["BTC"]
             currencyid = ["bitcoin"]
-            print("CET has been set as time zone and BTC will be used")
-    return tz, currency, currencyid
+            hotkey = "ctrl+shift+v"
+            print("CET has been set as time zone, BTC will be used, and the hotkey is ctrl+shift+v")
+    return tz, currency, currencyid, hotkey
 
-tz, coins, coinIDs = getConf()
+tz, coins, coinIDs, hotkey = getConf()
 
 latestVersion = requests.get("https://api.github.com/repos/KarlHlmgrn/crypto-oled/releases/latest")
 if latestVersion.status_code == 200:
@@ -339,8 +350,12 @@ def toggleVolume():
         keyboard.add_hotkey(-174, lambda: moveCursor("left"), suppress=True)
         keyboard.add_hotkey(-173, lambda: toggleCompare(), suppress=True)
 
-keyboard.add_hotkey('ctrl+shift+v', toggleVolume, suppress=True)
-
+if hotkey != "OFF":
+    try:
+        keyboard.add_hotkey(hotkey, toggleVolume, suppress=True)
+    except:
+        print(hotkey + " is not supported or is wrongly written, the hotkey has been disabled")
+## To disable the hotkey type OFF
 while True:
     if timer == 600:
             xValues, yValues, graphImage, actualIndex, currentPrice, dailyPercent, timeStamps = getGraph(coinIndex)
